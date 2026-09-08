@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:ngao/features/home/component_showcase_screen.dart';
 import '../features/home/home_screen.dart';
 
 class AppRouter {
@@ -9,6 +10,10 @@ class AppRouter {
         path: '/',
         builder: (context, state) => const HomeScreen(),
       ),
+      GoRoute(
+        path: '/showcase',
+        builder: (context, state) => const ComponentShowcaseScreen(),
+),
     ],
   );
 }
