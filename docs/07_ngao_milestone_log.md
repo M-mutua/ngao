@@ -97,3 +97,49 @@ Showcase screen and its route are dev-only and must be removed before Phase 18 (
 Phase 3: Domain Models.
 
 ---
+
+# Milestone M03: Domain Models
+
+**Date:** 2026-09-09
+
+**Status:** COMPLETE
+
+## Objective
+
+Implement testable, framework-independent domain entities and business rules per Roadmap Phase 3 and SDD §5.
+
+## Implemented
+
+* Pure Dart domain entities: `User`, `ProtectionPlan`, `Allocation`, `RiskWindow`, `TrustedContact`, `SoberMessage`, `InterventionEvent`, `SpendingEvent`, and `Reflection`
+* Closed domain enums for allocation categories, risk triggers, sober-message types, intervention states and actions, override state, and reflection spending status
+* Timestamped intervention actions attached to one intervention session event
+* Financial rules: total allocation, remaining income, flexible amount, relevant flexible spending, and spending-warning calculations
+* Validation and deterministic domain rules for currency, amounts, protection plans, risk windows, cooldowns, intervention transitions, and reflections
+* Fixed MVP currency constant: `KES`
+
+## Tested
+
+* Developer performed local verification
+* Result: implementation works correctly in the local development environment
+
+## Verification Evidence
+
+Developer confirmed: "works fine".
+
+## Deviations
+
+None from Phase 3 scope as defined in the roadmap. Risk windows intentionally require an end time after the start time within the same day; overnight windows are not represented.
+
+## Decisions Introduced
+
+None. Whole-KES integer amounts and same-day risk windows are implementation details within the approved Phase 3 model design, not new product decisions.
+
+## Known Issues
+
+None.
+
+## Next Milestone
+
+Phase 4: Local Persistence.
+
+---
