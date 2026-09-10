@@ -364,3 +364,30 @@ Accepted
 
 ---
 
+# Decision 021: Overnight Risk Windows
+
+**Date:** 2026-09-10
+
+**Context**
+
+High-risk periods commonly extend from an evening into the following morning. The initial Phase 3 model rejected an end time earlier than the start time, preventing realistic periods such as Friday 22:00 to Saturday 02:00.
+
+**Decision**
+
+Risk windows may span midnight. Their configured day or days represent the calendar days on which the window starts. When a window's end time is earlier than its start time, the end time occurs on the following calendar day.
+
+An end time equal to the start time remains invalid because it represents a zero-length window.
+
+**Reason**
+
+This supports realistic evening and nightlife-related risk periods while preserving deterministic, user-configured risk logic.
+
+**Impact**
+
+Friday 22:00 to 02:00 is active from 22:00 on Friday through, but not including, 02:00 on Saturday. The existing day, start-time, and end-time model remains sufficient; no additional persisted field is required. Risk-window activity calculations must evaluate both the current start day and the immediately preceding start day for overnight windows.
+
+**Status**
+
+Accepted
+
+---

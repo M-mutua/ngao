@@ -1,7 +1,7 @@
 import 'domain_enums.dart';
 
 class RiskWindow {
-  RiskWindow({
+  const RiskWindow({
     required this.id,
     required this.userId,
     required this.daysOfWeek,
@@ -9,23 +9,16 @@ class RiskWindow {
     required this.endTime,
     required this.trigger,
     required this.enabled,
-  }) {
-    if (endTime <= startTime) {
-      throw ArgumentError.value(
-        endTime,
-        'endTime',
-        'A risk window must end after it starts.',
-      );
-    }
-  }
+  });
 
   final String id;
   final String userId;
 
-  /// ISO weekday values: Monday is 1 and Sunday is 7.
+  /// ISO weekday values on which this window starts: Monday is 1 and Sunday is 7.
   final Set<int> daysOfWeek;
 
-  /// Time elapsed since midnight. Overnight windows are not represented.
+  /// Time elapsed since midnight. An end time earlier than the start time
+  /// represents a window that ends on the following day.
   final Duration startTime;
   final Duration endTime;
   final RiskTrigger trigger;

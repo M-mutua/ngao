@@ -70,18 +70,32 @@ String? validateRiskWindow(RiskWindow window) {
       !_isValidTimeOfDay(window.endTime)) {
     return 'Times must fall within a single day.';
   }
-  if (window.endTime <= window.startTime) {
-    return 'End time must be after start time.';
+  if (window.endTime == window.startTime) {
+    return 'Start time and end time cannot be the same.';
   }
   return null;
 }
 
+bool spansMidnight(RiskWindow window) => window.endTime < window.startTime;
+
 bool isRiskWindowActive(RiskWindow window, DateTime at) {
-  if (!window.enabled || !window.daysOfWeek.contains(at.weekday)) {
+  if (!window.enabled) {
     return false;
   }
-  final time = Duration(hours: at.hour, minutes: at.minute, seconds: at.second);
-  return time >= window.startTime && time < window.endTime;
+
+  final time = _timeOfDay(at);
+  if (!spansMidnight(window)) {
+    return window.daysOfWeek.contains(at.weekday) &&
+        time >= window.startTime &&
+        time < window.endTime;
+  }
+
+  if (window.daysOfWeek.contains(at.weekday) && time >= window.startTime) {
+    return true;
+  }
+
+  final previousDay = at.subtract(const Duration(days: 1)).weekday;
+  return window.daysOfWeek.contains(previousDay) && time < window.endTime;
 }
 
 bool isRiskWindowUpcoming(RiskWindow window, DateTime at) {
@@ -147,3 +161,11 @@ String? validateReflection(Reflection reflection) {
 
 bool _isValidTimeOfDay(Duration value) =>
     value >= Duration.zero && value < const Duration(days: 1);
+
+Duration _timeOfDay(DateTime value) => Duration(
+  hours: value.hour,
+  minutes: value.minute,
+  seconds: value.second,
+  milliseconds: value.millisecond,
+  microseconds: value.microsecond,
+);
