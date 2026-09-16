@@ -1,0 +1,50 @@
+import 'package:drift/drift.dart';
+
+import '../../../shared/models/allocation.dart' as domain;
+import '../../../shared/models/domain_enums.dart';
+import '../../../shared/models/intervention_event.dart' as domain;
+import '../../../shared/models/protection_plan.dart' as domain;
+import '../../../shared/models/reflection.dart' as domain;
+import '../../../shared/models/risk_window.dart' as domain;
+import '../../../shared/models/sober_message.dart' as domain;
+import '../../../shared/models/spending_event.dart' as domain;
+import '../../../shared/models/trusted_contact.dart' as domain;
+import '../../../shared/models/user.dart' as domain;
+import '../app_database.dart';
+import '../repositories/repositories.dart';
+
+class DriftUserRepository implements UserRepository {
+  DriftUserRepository(this.db); final AppDatabase db;
+  @override Future<void> save(domain.User value) async => db.into(db.users).insertOnConflictUpdate(UsersCompanion.insert(id: value.id, displayName: value.displayName, createdAt: value.createdAt));
+  @override Future<domain.User?> findById(String id) async { final row = await (db.select(db.users)..where((t) => t.id.equals(id))).getSingleOrNull(); return row == null ? null : domain.User(id: row.id, displayName: row.displayName, createdAt: row.createdAt); }
+  @override Future<void> deleteById(String id) async => (db.delete(db.users)..where((t) => t.id.equals(id))).go();
+}
+
+class DriftProtectionPlanRepository implements ProtectionPlanRepository {
+  DriftProtectionPlanRepository(this.db); final AppDatabase db;
+  @override Future<void> save(domain.ProtectionPlan value) => db.transaction(() async { await db.into(db.protectionPlans).insertOnConflictUpdate(ProtectionPlansCompanion.insert(id: value.id, userId: value.userId, plannedIncome: value.plannedIncome, currency: value.currency)); await (db.delete(db.allocations)..where((t) => t.protectionPlanId.equals(value.id))).go(); for (final a in value.allocations) { if (a.protectionPlanId != value.id) throw ArgumentError('Allocation must belong to its protection plan.'); await db.into(db.allocations).insert(AllocationsCompanion.insert(id: a.id, protectionPlanId: a.protectionPlanId, category: a.category, amount: a.amount, isProtected: a.isProtected)); } });
+  @override Future<domain.ProtectionPlan?> findByUserId(String userId) async { final row = await (db.select(db.protectionPlans)..where((t) => t.userId.equals(userId))).getSingleOrNull(); if (row == null) return null; final allocations = await (db.select(db.allocations)..where((t) => t.protectionPlanId.equals(row.id))).get(); return domain.ProtectionPlan(id: row.id, userId: row.userId, plannedIncome: row.plannedIncome, currency: row.currency, allocations: allocations.map((a) => domain.Allocation(id: a.id, protectionPlanId: a.protectionPlanId, category: a.category, amount: a.amount, isProtected: a.isProtected)).toList()); }
+  @override Future<void> deleteById(String id) async => (db.delete(db.protectionPlans)..where((t) => t.id.equals(id))).go();
+}
+
+class DriftRiskWindowRepository implements RiskWindowRepository {
+  DriftRiskWindowRepository(this.db); final AppDatabase db;
+  @override Future<void> save(domain.RiskWindow value) => db.transaction(() async { await db.into(db.riskWindows).insertOnConflictUpdate(RiskWindowsCompanion.insert(id: value.id, userId: value.userId, startTimeMicroseconds: value.startTime.inMicroseconds, endTimeMicroseconds: value.endTime.inMicroseconds, trigger: value.trigger, enabled: value.enabled)); await (db.delete(db.riskWindowDays)..where((t) => t.riskWindowId.equals(value.id))).go(); for (final day in value.daysOfWeek) { await db.into(db.riskWindowDays).insert(RiskWindowDaysCompanion.insert(riskWindowId: value.id, dayOfWeek: day)); } });
+  @override Future<List<domain.RiskWindow>> listByUserId(String userId) async { final rows = await (db.select(db.riskWindows)..where((t) => t.userId.equals(userId))).get(); return Future.wait(rows.map((r) async { final days = await (db.select(db.riskWindowDays)..where((t) => t.riskWindowId.equals(r.id))).get(); return domain.RiskWindow(id: r.id, userId: r.userId, daysOfWeek: days.map((d) => d.dayOfWeek).toSet(), startTime: Duration(microseconds: r.startTimeMicroseconds), endTime: Duration(microseconds: r.endTimeMicroseconds), trigger: r.trigger, enabled: r.enabled); })); }
+  @override Future<void> deleteById(String id) async => (db.delete(db.riskWindows)..where((t) => t.id.equals(id))).go();
+}
+
+class DriftTrustedContactRepository implements TrustedContactRepository { DriftTrustedContactRepository(this.db); final AppDatabase db; @override Future<void> save(domain.TrustedContact v) async => db.into(db.trustedContacts).insertOnConflictUpdate(TrustedContactsCompanion.insert(id:v.id,userId:v.userId,name:v.name,phoneNumber:v.phoneNumber)); @override Future<List<domain.TrustedContact>> listByUserId(String id) async => (await (db.select(db.trustedContacts)..where((t)=>t.userId.equals(id))).get()).map((r)=>domain.TrustedContact(id:r.id,userId:r.userId,name:r.name,phoneNumber:r.phoneNumber)).toList(); @override Future<void> deleteById(String id) async => (db.delete(db.trustedContacts)..where((t)=>t.id.equals(id))).go(); }
+class DriftSoberMessageRepository implements SoberMessageRepository { DriftSoberMessageRepository(this.db); final AppDatabase db; @override Future<void> save(domain.SoberMessage v) async => db.into(db.soberMessages).insertOnConflictUpdate(SoberMessagesCompanion.insert(id:v.id,userId:v.userId,type:v.type,content:v.content,createdAt:v.createdAt)); @override Future<List<domain.SoberMessage>> listByUserId(String id) async => (await (db.select(db.soberMessages)..where((t)=>t.userId.equals(id))).get()).map((r)=>domain.SoberMessage(id:r.id,userId:r.userId,type:r.type,content:r.content,createdAt:r.createdAt)).toList(); @override Future<void> deleteById(String id) async => (db.delete(db.soberMessages)..where((t)=>t.id.equals(id))).go(); }
+class DriftSpendingRepository implements SpendingRepository { DriftSpendingRepository(this.db); final AppDatabase db; @override Future<void> save(domain.SpendingEvent v) async => db.into(db.spendingEvents).insertOnConflictUpdate(SpendingEventsCompanion.insert(id:v.id,userId:v.userId,protectionPlanId:v.protectionPlanId,amount:v.amount,category:v.category,occurredAt:v.occurredAt,overrideState:v.overrideState)); domain.SpendingEvent _map(SpendingEvent r)=>domain.SpendingEvent(id:r.id,userId:r.userId,protectionPlanId:r.protectionPlanId,amount:r.amount,category:r.category,occurredAt:r.occurredAt,overrideState:r.overrideState); @override Future<List<domain.SpendingEvent>> listByUserId(String id) async => (await (db.select(db.spendingEvents)..where((t)=>t.userId.equals(id))).get()).map(_map).toList(); @override Future<List<domain.SpendingEvent>> listByProtectionPlanId(String id) async => (await (db.select(db.spendingEvents)..where((t)=>t.protectionPlanId.equals(id))).get()).map(_map).toList(); @override Future<void> deleteById(String id) async => (db.delete(db.spendingEvents)..where((t)=>t.id.equals(id))).go(); }
+
+class DriftInterventionRepository implements InterventionRepository {
+  DriftInterventionRepository(this.db); final AppDatabase db;
+  @override Future<void> save(domain.InterventionEvent v) => db.transaction(() async { await db.into(db.interventionEvents).insertOnConflictUpdate(InterventionEventsCompanion.insert(id:v.id,userId:v.userId,startedAt:v.startedAt,cooldownMicroseconds:v.cooldownDuration.inMicroseconds,state:v.state,completedAt:Value(v.completedAt))); await (db.delete(db.interventionActions)..where((t)=>t.interventionEventId.equals(v.id))).go(); for (var i=0;i<v.actions.length;i++) { final a=v.actions[i]; await db.into(db.interventionActions).insert(InterventionActionsCompanion.insert(id:'${v.id}:${a.recordedAt.microsecondsSinceEpoch}:$i',interventionEventId:v.id,type:a.type,recordedAt:a.recordedAt)); } });
+  Future<domain.InterventionEvent> _map(InterventionEvent r) async { final actions=await (db.select(db.interventionActions)..where((t)=>t.interventionEventId.equals(r.id))..orderBy([(t)=>OrderingTerm.asc(t.recordedAt)])).get(); return domain.InterventionEvent(id:r.id,userId:r.userId,startedAt:r.startedAt,cooldownDuration:Duration(microseconds:r.cooldownMicroseconds),state:r.state,completedAt:r.completedAt,actions:actions.map((a)=>domain.InterventionAction(type:a.type,recordedAt:a.recordedAt)).toList()); }
+  @override Future<List<domain.InterventionEvent>> listByUserId(String id) async => Future.wait((await (db.select(db.interventionEvents)..where((t)=>t.userId.equals(id))).get()).map(_map));
+  @override Future<domain.InterventionEvent?> findLatestActiveByUserId(String id) async { final row=await (db.select(db.interventionEvents)..where((t)=>t.userId.equals(id) & t.state.equalsValue(InterventionState.completed).not())..orderBy([(t)=>OrderingTerm.desc(t.startedAt)])..limit(1)).getSingleOrNull(); return row==null?null:_map(row); }
+  @override Future<void> deleteById(String id) async => (db.delete(db.interventionEvents)..where((t)=>t.id.equals(id))).go();
+}
+
+class DriftReflectionRepository implements ReflectionRepository { DriftReflectionRepository(this.db); final AppDatabase db; @override Future<void> save(domain.Reflection v) async => db.into(db.reflections).insertOnConflictUpdate(ReflectionsCompanion.insert(id:v.id,interventionEventId:v.interventionEventId,trigger:v.trigger,spendingStatus:v.spendingStatus,amountSpent:Value(v.amountSpent),whatHelped:v.whatHelped,notes:Value(v.notes),createdAt:v.createdAt)); @override Future<domain.Reflection?> findByInterventionEventId(String id) async { final r=await (db.select(db.reflections)..where((t)=>t.interventionEventId.equals(id))).getSingleOrNull(); return r==null?null:domain.Reflection(id:r.id,interventionEventId:r.interventionEventId,trigger:r.trigger,spendingStatus:r.spendingStatus,amountSpent:r.amountSpent,whatHelped:r.whatHelped,notes:r.notes,createdAt:r.createdAt); } @override Future<void> deleteById(String id) async => (db.delete(db.reflections)..where((t)=>t.id.equals(id))).go(); }

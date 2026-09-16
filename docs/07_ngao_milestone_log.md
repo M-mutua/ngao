@@ -143,3 +143,67 @@ None.
 Phase 4: Local Persistence.
 
 ---
+
+# Milestone M04: Local Persistence
+
+**Date:** 2026-09-16
+
+**Status:** COMPLETE
+
+## Objective
+
+Implement reliable local persistence for the Phase 4 objectives in the roadmap and SDD §6–7, including repository abstractions, CRUD, history queries, current-state queries, and data survival across a database close and reopen.
+
+## Implemented
+
+* Drift/SQLite database and generated database code
+* Tables for users, protection plans, allocations, risk windows, risk-window days, trusted contacts, sober messages, intervention events, intervention actions, spending events, and reflections
+* `risk_window_days` table with the Decision 021 source comment that stored days are the days on which a risk window starts
+* Repository interfaces using only Phase 3 domain models
+* Drift-backed repository implementations kept inside the storage layer
+* Transactional protection-plan-plus-allocations writes
+* Transactional intervention-event-plus-actions writes
+* Reflection uniqueness constraint on `interventionEventId`
+* Enum persistence as text and foreign-key cascade deletion through dependent records
+
+## Tested
+
+* 11/11 repository persistence tests passed:
+	* user CRUD
+	* protection-plan-plus-allocations aggregate persistence
+	* risk-window history query and deletion
+	* trusted-contact CRUD
+	* sober-message CRUD
+	* intervention-event-plus-actions aggregate persistence
+	* current active-intervention query excluding completed events
+	* spending history queries by user and protection plan
+	* reflection CRUD
+	* rejection of a second reflection for the same intervention event
+	* file-backed database close, reopen, and read-back persistence
+* Full test suite: 20/20 passed, up from 9 tests before the Phase 4 repository suite was added
+* `flutter analyze`: clean, with no issues found
+* Android app built and launched successfully on the Samsung SM-A145F after `flutter clean` resolved an unrelated stale Gradle incremental-resource cache
+
+## Verification Evidence
+
+The automated repository suite verifies that data written to a file-backed SQLite database remains available after closing and reopening the database. This proves persistence at the automated file-backed test level.
+
+No manual on-device check of data surviving an app restart was performed. The Samsung SM-A145F verification confirms build and launch success only; data survival after a physical-device app restart remains for developer confirmation.
+
+## Deviations
+
+None from Phase 4 scope.
+
+## Decisions Introduced
+
+None. The persistence technology and schema decisions are recorded as Architecture Change A02, not as a new product decision.
+
+## Known Issues
+
+No manual on-device restart-persistence check has been performed. Automated file-backed persistence is verified; physical-device restart survival remains unverified until developer confirmation.
+
+## Next Milestone
+
+Phase 5: Onboarding.
+
+---
