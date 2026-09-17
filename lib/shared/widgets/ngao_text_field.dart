@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../app/theme/design_tokens.dart';
 
 class NgaoTextField extends StatelessWidget {
@@ -7,6 +8,7 @@ class NgaoTextField extends StatelessWidget {
   final String? errorText;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final List<TextInputFormatter>? inputFormatters;
 
   const NgaoTextField({
     super.key,
@@ -15,6 +17,7 @@ class NgaoTextField extends StatelessWidget {
     this.errorText,
     this.keyboardType,
     this.obscureText = false,
+    this.inputFormatters,
   });
 
   @override
@@ -23,6 +26,7 @@ class NgaoTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
         errorText: errorText,
