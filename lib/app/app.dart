@@ -8,10 +8,14 @@ class NgaoApp extends StatelessWidget {
     super.key,
     required this.userRepository,
     required this.protectionPlanRepository,
+    required this.riskWindowRepository,
+    required this.trustedContactRepository,
   });
 
   final UserRepository userRepository;
   final ProtectionPlanRepository protectionPlanRepository;
+  final RiskWindowRepository riskWindowRepository;
+  final TrustedContactRepository trustedContactRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +26,8 @@ class NgaoApp extends StatelessWidget {
       routerConfig: AppRouter.create(
         userRepository,
         protectionPlanRepository,
+        riskWindowRepository,
+        trustedContactRepository,
       ),
     );
   }

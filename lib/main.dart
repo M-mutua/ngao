@@ -8,12 +8,16 @@ void main() {
   final database = AppDatabase();
   final userRepository = DriftUserRepository(database);
   final protectionPlanRepository = DriftProtectionPlanRepository(database);
+  final riskWindowRepository = DriftRiskWindowRepository(database);
+  final trustedContactRepository = DriftTrustedContactRepository(database);
 
   runZonedGuarded(
     () => runApp(
       NgaoApp(
         userRepository: userRepository,
         protectionPlanRepository: protectionPlanRepository,
+        riskWindowRepository: riskWindowRepository,
+        trustedContactRepository: trustedContactRepository,
       ),
     ),
     (error, stackTrace) {

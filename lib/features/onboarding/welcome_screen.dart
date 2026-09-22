@@ -14,10 +14,14 @@ class WelcomeScreen extends StatefulWidget {
     super.key,
     required this.userRepository,
     required this.protectionPlanRepository,
+    required this.riskWindowRepository,
+    required this.trustedContactRepository,
   });
 
   final UserRepository userRepository;
   final ProtectionPlanRepository protectionPlanRepository;
+  final RiskWindowRepository riskWindowRepository;
+  final TrustedContactRepository trustedContactRepository;
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -42,11 +46,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       if (!mounted) return;
 
       if (user != null) {
-        final plan = await widget.protectionPlanRepository.findByUserId(
-          _currentUserId,
-        );
+        final plan = await widget.protectionPlanRepository.findByUserId(_currentUserId);
+        final results = await Future.wait([
+          widget.riskWindowRepository.listByUserId(_currentUserId),
+          widget.trustedContactRepository.listByUserId(_currentUserId),
+        ]);
         if (!mounted) return;
-        context.go(plan == null ? '/protection-plan' : '/home');
+
+        final riskWindows = results[0];
+        final trustedContacts = results[1];
+        if (plan == null) {
+          context.go('/protection-plan');
+        } else if (riskWindows.isEmpty) {
+          context.go('/risk-period');
+        } else if (trustedContacts.isEmpty) {
+          context.go('/trusted-person');
+        } else {
+          context.go('/home');
+        }
         return;
       }
 

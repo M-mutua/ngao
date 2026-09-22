@@ -20,9 +20,11 @@ class ProtectionPlanScreen extends StatefulWidget {
   const ProtectionPlanScreen({
     super.key,
     required this.protectionPlanRepository,
+    required this.riskWindowRepository,
   });
 
   final ProtectionPlanRepository protectionPlanRepository;
+  final RiskWindowRepository riskWindowRepository;
 
   @override
   State<ProtectionPlanScreen> createState() => _ProtectionPlanScreenState();
@@ -95,7 +97,7 @@ class _ProtectionPlanScreenState extends State<ProtectionPlanScreen> {
 
     try {
       await widget.protectionPlanRepository.save(plan);
-      if (mounted) context.go('/home');
+      if (mounted) context.go('/risk-period');
     } catch (_) {
       if (!mounted) return;
       setState(() {
