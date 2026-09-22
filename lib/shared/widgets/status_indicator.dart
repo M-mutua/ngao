@@ -22,11 +22,16 @@ class NgaoStatusIndicator extends StatelessWidget {
     };
 
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: color, size: 18),
         const SizedBox(width: NgaoSpacing.xs),
-        Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w500)),
+        Flexible(
+          child: Text(
+            label,
+            style: TextStyle(color: color, fontWeight: FontWeight.w500),
+          ),
+        ),
       ],
     );
   }
