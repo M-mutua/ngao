@@ -13,7 +13,7 @@ import 'package:ngao/shared/models/trusted_contact.dart';
 import 'package:ngao/shared/models/user.dart';
 
 void main() {
-  testWidgets('app launches to the welcome screen', (
+  testWidgets('first launch shows intro before the welcome form', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -27,6 +27,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ngao'), findsOneWidget);
+    expect(find.text('Make room for the life you want'), findsOneWidget);
+    expect(find.text('Display name'), findsNothing);
+
+    await tester.tap(find.text('Get started'));
+    await tester.pump();
     expect(find.text('Welcome to Ngao'), findsOneWidget);
     expect(find.text('Display name'), findsOneWidget);
   });
@@ -44,6 +49,7 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField).at(0), '1000');
     await tester.tap(find.text('rent'));
@@ -62,6 +68,29 @@ void main() {
 
     await tester.tap(find.text('Save plan'), warnIfMissed: false);
     expect(protectionPlanRepository.savedPlans, isEmpty);
+  });
+
+  testWidgets('loads a saved protection plan before enabling its form', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ProtectionPlanScreen(
+          protectionPlanRepository: _FakeProtectionPlanRepository(
+            plan: _samplePlan,
+          ),
+          riskWindowRepository: _FakeRiskWindowRepository(),
+        ),
+      ),
+    );
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Save plan'), findsNothing);
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Save plan'), findsOneWidget);
+    expect(find.text('KES 1000'), findsAtLeastNWidgets(1));
   });
 
   testWidgets('routes a user without a plan to protection plan', (
@@ -83,7 +112,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Protection plan'), findsOneWidget);
+    expect(find.text('Protection plan'), findsAtLeastNWidgets(1));
     expect(find.text('Plan your income'), findsOneWidget);
   });
 
@@ -150,7 +179,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Risk period'), findsOneWidget);
+    expect(find.text('Risk period'), findsAtLeastNWidgets(1));
     expect(find.text('Choose the days and time'), findsOneWidget);
   });
 
@@ -171,7 +200,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Trusted person'), findsOneWidget);
+    expect(find.text('Trusted person'), findsAtLeastNWidgets(1));
     expect(find.text('Add someone you trust'), findsOneWidget);
   });
 
@@ -224,6 +253,30 @@ void main() {
     expect(repository.savedWindows.single.startTime, const Duration(hours: 22));
     expect(repository.savedWindows.single.endTime, const Duration(hours: 2));
     expect(repository.savedWindows.single.trigger, RiskTrigger.socialEvent);
+  });
+
+  testWidgets('loads a saved risk period before enabling its form', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: RiskPeriodScreen(
+          riskWindowRepository: _FakeRiskWindowRepository(
+            windows: [_sampleRiskWindow],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Save risk period'), findsNothing);
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Save risk period'), findsOneWidget);
+    expect(find.text('Friday'), findsOneWidget);
+    expect(find.text('10:00 PM'), findsOneWidget);
+    expect(find.text('2:00 AM'), findsOneWidget);
   });
 }
 

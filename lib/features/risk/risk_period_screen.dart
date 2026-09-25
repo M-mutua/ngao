@@ -7,6 +7,7 @@ import '../../shared/models/domain_enums.dart';
 import '../../shared/models/risk_window.dart';
 import '../../shared/widgets/ngao_button.dart';
 import '../../shared/widgets/ngao_card.dart';
+import '../../shared/widgets/ngao_onboarding_progress.dart';
 import '../../shared/widgets/ngao_time_field.dart';
 import '../../shared/widgets/status_indicator.dart';
 
@@ -35,7 +36,46 @@ class _RiskPeriodScreenState extends State<RiskPeriodScreen> {
   RiskTrigger? _selectedTrigger;
   bool _enabled = true;
   String? _message;
+  bool _isLoading = true;
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRiskWindow();
+  }
+
+  Future<void> _loadRiskWindow() async {
+    try {
+      final windows = await widget.riskWindowRepository.listByUserId(
+        _currentUserId,
+      );
+      if (!mounted) return;
+      final window = windows.where((item) => item.id == _currentRiskWindowId).firstOrNull;
+      if (window != null) {
+        _selectedDays
+          ..clear()
+          ..addAll(window.daysOfWeek);
+        _startTime = TimeOfDay(
+          hour: window.startTime.inHours,
+          minute: window.startTime.inMinutes % 60,
+        );
+        _endTime = TimeOfDay(
+          hour: window.endTime.inHours,
+          minute: window.endTime.inMinutes % 60,
+        );
+        _selectedTrigger = window.trigger;
+        _enabled = window.enabled;
+      }
+      setState(() => _isLoading = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _message = 'Could not load your risk period.';
+        _isLoading = false;
+      });
+    }
+  }
 
   RiskWindow get _draftWindow => RiskWindow(
         id: _currentRiskWindowId,
@@ -111,9 +151,26 @@ class _RiskPeriodScreenState extends State<RiskPeriodScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+            child: _isLoading
+                ? const CircularProgressIndicator()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            tooltip: 'Back',
+                            onPressed: () => context.go('/protection-plan'),
+                            icon: const Icon(Icons.arrow_back),
+                          ),
+                          const Expanded(
+                            child: NgaoOnboardingProgress(
+                              step: 2,
+                              label: 'Risk period',
+                            ),
+                          ),
+                        ],
+                      ),
                 NgaoCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -179,7 +236,7 @@ class _RiskPeriodScreenState extends State<RiskPeriodScreen> {
                       ),
                     ],
                   ),
-                ),
+                      ),
                 const SizedBox(height: 16),
                 NgaoCard(
                   child: Column(
@@ -222,7 +279,9 @@ class _RiskPeriodScreenState extends State<RiskPeriodScreen> {
                       const SizedBox(height: 8),
                       NgaoButton(
                         label: _isSaving ? 'Saving...' : 'Save risk period',
-                        onPressed: _isSaving ? null : _saveWindow,
+                        onPressed: _isLoading || _isSaving
+                          ? null
+                          : _saveWindow,
                       ),
                     ],
                   ),

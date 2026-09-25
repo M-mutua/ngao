@@ -9,6 +9,7 @@ import '../../shared/models/domain_enums.dart';
 import '../../shared/models/protection_plan.dart';
 import '../../shared/widgets/ngao_button.dart';
 import '../../shared/widgets/ngao_card.dart';
+import '../../shared/widgets/ngao_onboarding_progress.dart';
 import '../../shared/widgets/ngao_text_field.dart';
 import '../../shared/widgets/status_indicator.dart';
 
@@ -36,6 +37,7 @@ class _ProtectionPlanScreenState extends State<ProtectionPlanScreen> {
   final _allocations = <Allocation>[];
   AllocationCategory? _selectedCategory;
   String? _formMessage;
+  bool _isLoading = true;
   bool _isSaving = false;
 
   int get _plannedIncome => int.tryParse(_incomeController.text) ?? 0;
@@ -52,6 +54,29 @@ class _ProtectionPlanScreenState extends State<ProtectionPlanScreen> {
   void initState() {
     super.initState();
     _incomeController.addListener(_refreshTotals);
+    _loadPlan();
+  }
+
+  Future<void> _loadPlan() async {
+    try {
+      final plan = await widget.protectionPlanRepository.findByUserId(
+        _currentUserId,
+      );
+      if (!mounted) return;
+      if (plan != null) {
+        _incomeController.text = plan.plannedIncome.toString();
+        _allocations
+          ..clear()
+          ..addAll(plan.allocations);
+      }
+      setState(() => _isLoading = false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _formMessage = 'Could not load your protection plan.';
+        _isLoading = false;
+      });
+    }
   }
 
   void _refreshTotals() => setState(() {});
@@ -128,9 +153,15 @@ class _ProtectionPlanScreenState extends State<ProtectionPlanScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+            child: _isLoading
+                ? const CircularProgressIndicator()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const NgaoOnboardingProgress(
+                        step: 1,
+                        label: 'Protection plan',
+                      ),
                 NgaoCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -148,7 +179,7 @@ class _ProtectionPlanScreenState extends State<ProtectionPlanScreen> {
                       ),
                     ],
                   ),
-                ),
+                      ),
                 const SizedBox(height: 16),
                 NgaoCard(
                   child: Column(
@@ -223,7 +254,9 @@ class _ProtectionPlanScreenState extends State<ProtectionPlanScreen> {
                       const SizedBox(height: 16),
                       NgaoButton(
                         label: _isSaving ? 'Saving...' : 'Save plan',
-                        onPressed: _isSaving || overIncome ? null : _savePlan,
+                        onPressed: _isLoading || _isSaving || overIncome
+                          ? null
+                          : _savePlan,
                       ),
                     ],
                   ),

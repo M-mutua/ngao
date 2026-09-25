@@ -32,6 +32,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   String? _savedName;
   String? _errorText;
   bool _isLoading = true;
+  bool _showIntro = false;
   bool _isSaving = false;
 
   @override
@@ -69,6 +70,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
       setState(() {
         _savedName = user?.displayName;
+        _showIntro = user == null;
         _isLoading = false;
       });
     } catch (_) {
@@ -136,6 +138,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             constraints: const BoxConstraints(maxWidth: 480),
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
+              : _showIntro
+                ? _IntroContent(
+                  onGetStarted: () => setState(() => _showIntro = false),
+                  )
                 : _savedName != null
                     ? Text(
                         'Welcome back, $_savedName',
@@ -175,6 +181,33 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _IntroContent extends StatelessWidget {
+  const _IntroContent({required this.onGetStarted});
+
+  final VoidCallback onGetStarted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Make room for the life you want',
+          style: Theme.of(context).textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'The sober-you already knows what matters. Ngao helps you make that plan visible and easier to follow when things get difficult.',
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        NgaoButton(label: 'Get started', onPressed: onGetStarted),
+      ],
     );
   }
 }

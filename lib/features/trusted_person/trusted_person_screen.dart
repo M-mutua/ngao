@@ -6,6 +6,7 @@ import '../../core/utils/domain_validation.dart';
 import '../../shared/models/trusted_contact.dart';
 import '../../shared/widgets/ngao_button.dart';
 import '../../shared/widgets/ngao_card.dart';
+import '../../shared/widgets/ngao_onboarding_progress.dart';
 import '../../shared/widgets/ngao_text_field.dart';
 import '../../shared/widgets/status_indicator.dart';
 
@@ -82,8 +83,26 @@ class _TrustedPersonScreenState extends State<TrustedPersonScreen> {
           padding: const EdgeInsets.all(16),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
-            child: NgaoCard(
-              child: Column(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      tooltip: 'Back',
+                      onPressed: () => context.go('/risk-period'),
+                      icon: const Icon(Icons.arrow_back),
+                    ),
+                    const Expanded(
+                      child: NgaoOnboardingProgress(
+                        step: 3,
+                        label: 'Trusted person',
+                      ),
+                    ),
+                  ],
+                ),
+                NgaoCard(
+                  child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
@@ -114,7 +133,9 @@ class _TrustedPersonScreenState extends State<TrustedPersonScreen> {
                     onPressed: _isSaving ? null : _saveContact,
                   ),
                 ],
-              ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
