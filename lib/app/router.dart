@@ -30,18 +30,21 @@ class AppRouter {
         builder: (context, state) => ProtectionPlanScreen(
           protectionPlanRepository: protectionPlanRepository,
           riskWindowRepository: riskWindowRepository,
+          returnToHome: state.uri.queryParameters['returnToHome'] == 'true',
         ),
       ),
       GoRoute(
         path: '/risk-period',
         builder: (context, state) => RiskPeriodScreen(
           riskWindowRepository: riskWindowRepository,
+          returnToHome: state.uri.queryParameters['returnToHome'] == 'true',
         ),
       ),
       GoRoute(
         path: '/trusted-person',
         builder: (context, state) => TrustedPersonScreen(
           trustedContactRepository: trustedContactRepository,
+          returnToHome: state.uri.queryParameters['returnToHome'] == 'true',
         ),
       ),
       GoRoute(

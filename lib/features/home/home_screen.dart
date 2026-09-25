@@ -12,7 +12,20 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Ngao Phase 1: navigation and theme scaffold.'),
+            const Text('Your plan'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.go('/protection-plan?returnToHome=true'),
+              child: const Text('Your Protection Plan'),
+            ),
+            ElevatedButton(
+              onPressed: () => context.go('/risk-period?returnToHome=true'),
+              child: const Text('Your Risk Period'),
+            ),
+            ElevatedButton(
+              onPressed: () => context.go('/trusted-person?returnToHome=true'),
+              child: const Text('Your Trusted Person'),
+            ),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => context.push('/showcase'),

@@ -22,10 +22,12 @@ class ProtectionPlanScreen extends StatefulWidget {
     super.key,
     required this.protectionPlanRepository,
     required this.riskWindowRepository,
+    this.returnToHome = false,
   });
 
   final ProtectionPlanRepository protectionPlanRepository;
   final RiskWindowRepository riskWindowRepository;
+  final bool returnToHome;
 
   @override
   State<ProtectionPlanScreen> createState() => _ProtectionPlanScreenState();
@@ -122,7 +124,9 @@ class _ProtectionPlanScreenState extends State<ProtectionPlanScreen> {
 
     try {
       await widget.protectionPlanRepository.save(plan);
-      if (mounted) context.go('/risk-period');
+      if (mounted) {
+        context.go(widget.returnToHome ? '/home' : '/risk-period');
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {

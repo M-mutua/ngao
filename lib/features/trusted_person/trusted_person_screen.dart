@@ -18,9 +18,11 @@ class TrustedPersonScreen extends StatefulWidget {
   const TrustedPersonScreen({
     super.key,
     required this.trustedContactRepository,
+    this.returnToHome = false,
   });
 
   final TrustedContactRepository trustedContactRepository;
+  final bool returnToHome;
 
   @override
   State<TrustedPersonScreen> createState() => _TrustedPersonScreenState();
@@ -90,7 +92,9 @@ class _TrustedPersonScreenState extends State<TrustedPersonScreen> {
                   children: [
                     IconButton(
                       tooltip: 'Back',
-                      onPressed: () => context.go('/risk-period'),
+                      onPressed: () => context.go(
+                        widget.returnToHome ? '/home' : '/risk-period',
+                      ),
                       icon: const Icon(Icons.arrow_back),
                     ),
                     const Expanded(

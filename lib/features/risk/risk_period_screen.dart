@@ -20,10 +20,12 @@ class RiskPeriodScreen extends StatefulWidget {
     super.key,
     required this.riskWindowRepository,
     this.timePicker,
+    this.returnToHome = false,
   });
 
   final RiskWindowRepository riskWindowRepository;
   final NgaoTimePicker? timePicker;
+  final bool returnToHome;
 
   @override
   State<RiskPeriodScreen> createState() => _RiskPeriodScreenState();
@@ -110,7 +112,9 @@ class _RiskPeriodScreenState extends State<RiskPeriodScreen> {
 
     try {
       await widget.riskWindowRepository.save(window);
-      if (mounted) context.go('/trusted-person');
+      if (mounted) {
+        context.go(widget.returnToHome ? '/home' : '/trusted-person');
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -160,7 +164,11 @@ class _RiskPeriodScreenState extends State<RiskPeriodScreen> {
                         children: [
                           IconButton(
                             tooltip: 'Back',
-                            onPressed: () => context.go('/protection-plan'),
+                            onPressed: () => context.go(
+                                widget.returnToHome
+                                  ? '/home'
+                                  : '/protection-plan',
+                            ),
                             icon: const Icon(Icons.arrow_back),
                           ),
                           const Expanded(
